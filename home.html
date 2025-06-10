@@ -68,6 +68,7 @@
             flex-direction: column;
             width: 48%; /* Roughly half the width */
             margin-right: 2%; /* Space between left and right columns */
+            gap: 20px;
         }
 
         .right-column {
@@ -79,7 +80,6 @@
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px; /* Space between containers */
             min-height: 150px; /* Example height */
             display: flex;
             justify-content: center;
@@ -182,7 +182,7 @@
         }
 
         /* Responsive adjustments */
-        @media (max-width: 768px) { /* Changed breakpoint for tablet/larger phones */
+        @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
             }
@@ -245,7 +245,7 @@
                 <div class="container">Left Container 2</div>
             </div>
             <div class="right-column">
-                <div class="container">Right Container</div>
+                <div class="container" style="height: 100%; margin-bottom: 0;">Right Container</div>
             </div>
         </div>
         <div class="bottom-section">
