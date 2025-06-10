@@ -1,0 +1,134 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e0f2f7; /* Light blue background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.login-container {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.input-group {
+    text-align: left;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.input-group .icon {
+    margin-right: 8px;
+    font-size: 1.2em;
+    vertical-align: middle;
+}
+
+.input-group input {
+    width: calc(100% - 20px);
+    padding: 12px 10px;
+    border: 1px solid #D9DAD9; /* Updated color */
+    border-radius: 8px;
+    font-size: 1em;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 40px;
+    cursor: pointer;
+    color: #888;
+}
+
+.forgot-password {
+    display: block;
+    text-align: left;
+    margin-top: -10px;
+    margin-bottom: 20px;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn.sign-up {
+    background-color: #fff;
+    color: #68A4A5; /* Updated color */
+    border: 1px solid #68A4A5; /* Updated color */
+    margin-right: 10px;
+}
+
+.btn.sign-up:hover {
+    background-color: #e6f2ff;
+}
+
+.btn.log-in {
+    background-color: #4C8055; /* Updated color */
+    color: #fff;
+    margin-left: 10px;
+}
+
+.btn.log-in:hover {
+    background-color: #3b6644; /* Darker shade of #4C8055 */
+}
+
+.or-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: #888;
+}
+
+.or-divider::before, .or-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #D9DAD9; /* Updated color */
+}
+
+.or-divider:not(:empty)::before {
+    margin-right: .25em;
+}
+
+.or-divider:not(:empty)::after {
+    margin-left: .25em;
+}
+
+.btn.deriv-login {
+    background-color: #ff444f; /* Deriv red */
+    color: #fff;
+    width: 100%;
+    padding: 12px 20px;
+}
+
+.btn.deriv-login:hover {
+    background-color: #e03b46;
+} 

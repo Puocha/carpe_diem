@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .home-container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <h1>Welcome to Carpe Diem!</h1>
+        <p>You have successfully logged in.</p>
+        <button class="btn-logout" id="logout-btn">Logout</button>
+    </div>
+    <script>
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('deriv_token');
+            window.location.href = 'index.html';
+        });
+
+        // Optional: Display the token (for demonstration, remove in production)
+        const token = localStorage.getItem('deriv_token');
+        if (token) {
+            const tokenDisplay = document.createElement('p');
+            tokenDisplay.textContent = `Your Deriv token (for demonstration): ${token.substring(0, 10)}...`;
+            document.querySelector('.home-container').insertBefore(tokenDisplay, document.getElementById('logout-btn'));
+        }
+    </script>
+</body>
+</html> 
