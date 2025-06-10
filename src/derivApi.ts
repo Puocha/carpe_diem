@@ -1,6 +1,8 @@
 import DerivAPIBasic from '@deriv/deriv-api/dist/DerivAPIBasic';
 
 const APP_ID = '71979'; // Your Deriv App ID
+const RECONNECT_INTERVAL = 1000; // 1 second
+const PING_INTERVAL = 30000; // 30 seconds
 
 interface Account {
   loginid: string;
@@ -10,50 +12,95 @@ interface Account {
 }
 
 class DerivApiService {
-  private api: DerivAPIBasic;
-  private connection: WebSocket;
+  private api!: DerivAPIBasic;
+  private connection!: WebSocket;
   private token: string | null = null;
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  private pingTimer: ReturnType<typeof setInterval> | null = null;
+  private isConnected: boolean = false; // Track connection status
 
   constructor() {
+    this.connect();
+  }
+
+  private connect() {
+    if (this.connection && (this.connection.readyState === WebSocket.OPEN || this.connection.readyState === WebSocket.CONNECTING)) {
+        return; // Already connected or connecting
+    }
+    console.log('Attempting to establish Deriv WebSocket connection...');
     this.connection = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
     this.api = new DerivAPIBasic({ connection: this.connection });
 
     this.connection.onopen = () => {
       console.log('Deriv WebSocket connection established.');
-      this.authorize();
+      this.isConnected = true;
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+      }
+      // Authorize only if token is already available
+      if (this.token) {
+        this.authorize();
+      }
     };
 
     this.connection.onclose = () => {
       console.log('Deriv WebSocket connection closed.');
-      // Implement reconnection logic if needed
+      this.isConnected = false;
+      if (this.pingTimer) {
+        clearInterval(this.pingTimer);
+        this.pingTimer = null;
+      }
+      // Attempt to reconnect after a delay
+      if (!this.reconnectTimeout) {
+        this.reconnectTimeout = setTimeout(() => this.connect(), RECONNECT_INTERVAL);
+      }
     };
 
     this.connection.onerror = (error) => {
       console.error('Deriv WebSocket error:', error);
+      this.isConnected = false;
+      if (this.pingTimer) {
+        clearInterval(this.pingTimer);
+        this.pingTimer = null;
+      }
+      // Attempt to reconnect after a delay
+      if (!this.reconnectTimeout) {
+        this.reconnectTimeout = setTimeout(() => this.connect(), RECONNECT_INTERVAL);
+      }
     };
   }
 
   public setToken(token: string) {
     this.token = token;
-    if (this.connection.readyState === WebSocket.OPEN) {
+    if (this.isConnected) {
       this.authorize();
     }
   }
 
   private async authorize(): Promise<any> {
-    if (this.token) {
-      console.log('Authorizing with token...');
-      try {
-        const response = await this.api.authorize(this.token);
-        console.log('Authorization successful:', response);
-        return response;
-      } catch (error) {
-        console.error('Authorization failed:', error);
-        throw error;
-      }
-    } else {
+    if (!this.token) {
       console.warn('No token available for authorization.');
       return null;
+    }
+    
+    console.log('Authorizing with token...');
+    try {
+      const response = await this.api.authorize(this.token);
+      console.log('Authorization successful:', response);
+
+      // Start pinging after successful authorization
+      if (this.pingTimer) {
+        clearInterval(this.pingTimer);
+      }
+      this.pingTimer = setInterval(() => {
+        this.api.ping();
+      }, PING_INTERVAL);
+
+      return response;
+    } catch (error) {
+      console.error('Authorization failed:', error);
+      throw error;
     }
   }
 
@@ -67,23 +114,18 @@ class DerivApiService {
     await this.authorize();
 
     try {
-      const response = await this.api.send({
-        "get_account_status": 1
-      });
-      console.log('Account status response:', response);
-
       const accountListResponse = await this.api.send({
         "account_list": 1
       });
+      console.log('Account list response:', accountListResponse);
 
       const accounts: Account[] = accountListResponse.account_list.map((acc: any) => ({
         loginid: acc.loginid,
         currency: acc.currency,
-        balance: acc.balance,
+        balance: 0, // Initialize balance to 0, will fetch actual balance below
         is_virtual: acc.is_virtual
       }));
 
-      // Now get balances for each account
       const accountsWithBalances: Account[] = [];
       for (const account of accounts) {
         const balanceResponse = await this.api.balance({ account: account.loginid });
@@ -107,12 +149,8 @@ class DerivApiService {
       return null;
     }
     try {
-      const response = await this.api.residence_list(); // Get residence list first
-      const default_currency = response.residence_list[0].currency_details.find((c:any) => c.is_default)?.code || 'USD';
-      
       const switchResponse = await this.api.send({
-        "switch_account": loginid,
-        "default_currency": default_currency
+        "switch_account": loginid
       });
       console.log('Switch account response:', switchResponse);
       // Update the stored token if a new one is provided on switch
@@ -120,6 +158,8 @@ class DerivApiService {
         this.token = switchResponse.authorize.token;
         localStorage.setItem('deriv_token', switchResponse.authorize.token);
       }
+      // Re-authorize after switch to update the API object's internal state
+      await this.authorize();
       return switchResponse;
     } catch (error) {
       console.error('Error switching account:', error);
@@ -128,7 +168,15 @@ class DerivApiService {
   }
 
   public disconnect() {
-    this.api.disconnect();
+    if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+    }
+    if (this.pingTimer) {
+        clearInterval(this.pingTimer);
+        this.pingTimer = null;
+    }
+    this.connection.close();
   }
 }
 
