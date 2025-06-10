@@ -80,12 +80,63 @@
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            min-height: 80px; /* Further reduced height */
+            min-height: 80px;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column; /* Changed to column to stack content */
+            justify-content: flex-start; /* Align content to top */
+            align-items: flex-start; /* Align content to left */
             font-size: 1.2em;
             color: #333;
+        }
+
+        .container h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.5em;
+            width: 100%;
+            text-align: center;
+        }
+
+        .input-group-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Space between form groups */
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .form-group label {
+            flex-basis: 50%; /* Allocate space for labels */
+            text-align: left;
+            font-size: 0.95em;
+            color: #555;
+        }
+
+        .form-group input[type="number"] {
+            flex-basis: 45%; /* Allocate space for inputs */
+            padding: 8px;
+            border: 1px solid #D9DAD9;
+            border-radius: 5px;
+            font-size: 0.9em;
+            text-align: right;
+        }
+
+        .form-group.checkbox-group {
+            justify-content: flex-start; /* Align checkbox to left */
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .form-group.checkbox-group input[type="checkbox"] {
+            width: auto; /* Override flex-basis for checkbox */
+            margin: 0;
         }
 
         .bottom-section {
@@ -241,7 +292,35 @@
     <div class="main-wrapper">
         <div class="main-content">
             <div class="left-column">
-                <div class="container">Left Container 1</div>
+                <div class="container">
+                    <h2>Trading Details</h2>
+                    <div class="input-group-container">
+                        <div class="form-group">
+                            <label for="stake">Stake:</label>
+                            <input type="number" id="stake" value="0.35" min="0.01" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="martingale">Martingale:</label>
+                            <input type="number" id="martingale" value="1.2" min="1" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="martingale-level">Martingale Level:</label>
+                            <input type="number" id="martingale-level" value="5" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="max-loss">Maximum Loss:</label>
+                            <input type="number" id="max-loss" value="100" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="target-profit">Target Profit:</label>
+                            <input type="number" id="target-profit" value="100" min="0">
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="use-martingale">
+                            <label for="use-martingale">Use Martingale</label>
+                        </div>
+                    </div>
+                </div>
                 <div class="container">Left Container 2</div>
             </div>
             <div class="right-column">
