@@ -105,7 +105,7 @@ class DerivApiService {
     if (!this.token) {
       console.warn('No token available for authorization. Skipping authorization.');
       this.authorizationPromise = null;
-      return null;
+      throw new Error('No token available for authorization');
     }
 
     if (this.authorizationPromise) {
@@ -118,6 +118,10 @@ class DerivApiService {
       try {
         const response = await this.api.authorize(this.token!);
         console.log('Authorization successful:', response);
+
+        if (response.error) {
+          throw new Error(response.error.message || 'Authorization failed');
+        }
 
         if (this.pingTimer) {
           clearInterval(this.pingTimer);
@@ -136,9 +140,17 @@ class DerivApiService {
         }, PING_INTERVAL);
 
         resolve(response);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Authorization failed:', error);
         this.isConnected = false;
+        
+        // Check if the error is due to an invalid token
+        if (error.message?.toLowerCase().includes('token') || 
+            error.message?.toLowerCase().includes('authorize') ||
+            error.message?.toLowerCase().includes('invalid')) {
+          throw new Error('Invalid or expired token');
+        }
+        
         reject(error);
       } finally {
         this.authorizationPromise = null;
@@ -150,12 +162,11 @@ class DerivApiService {
 
   public async getAccountDetails(): Promise<Account[]> {
     if (!this.token) {
-      console.warn('Cannot get account details: no token available.');
-      return [];
+      throw new Error('No token available');
     }
 
     try {
-      // Wait for connection and authorization
+      // Wait for connection and authorization with timeout
       if (!this.isConnected) {
         await new Promise<void>((resolve, reject) => {
           const timeout = setTimeout(() => {
@@ -183,6 +194,10 @@ class DerivApiService {
       });
       console.log('Account list response:', accountListResponse);
 
+      if (accountListResponse.error) {
+        throw new Error(accountListResponse.error.message || 'Failed to fetch account list');
+      }
+
       const accounts: Account[] = accountListResponse.account_list.map((acc: any) => ({
         loginid: acc.loginid,
         currency: acc.currency,
@@ -194,6 +209,11 @@ class DerivApiService {
       for (const account of accounts) {
         try {
           const balanceResponse = await this.api.balance({ account: account.loginid });
+          if (balanceResponse.error) {
+            console.error(`Error fetching balance for account ${account.loginid}:`, balanceResponse.error);
+            accountsWithBalances.push(account);
+            continue;
+          }
           accountsWithBalances.push({
             ...account,
             balance: balanceResponse.balance.balance
@@ -206,8 +226,13 @@ class DerivApiService {
       
       return accountsWithBalances;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching account details:', error);
+      if (error.message?.toLowerCase().includes('token') || 
+          error.message?.toLowerCase().includes('authorize') ||
+          error.message?.toLowerCase().includes('invalid')) {
+        throw new Error('Invalid or expired token');
+      }
       throw error;
     }
   }
