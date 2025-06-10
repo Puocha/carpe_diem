@@ -116,19 +116,28 @@ class DerivApiService {
     console.log('Starting authorization with token...');
     this.authorizationPromise = new Promise(async (resolve, reject) => {
       try {
+        console.log('Sending authorization request...');
         const response = await this.api.authorize(this.token!);
-        console.log('Authorization successful:', response);
+        console.log('Authorization response received:', response);
 
         if (response.error) {
+          console.error('Authorization error:', response.error);
           throw new Error(response.error.message || 'Authorization failed');
         }
 
+        if (!response.authorize) {
+          console.error('Invalid authorization response:', response);
+          throw new Error('Invalid authorization response format');
+        }
+
+        console.log('Authorization successful, setting up ping...');
         if (this.pingTimer) {
           clearInterval(this.pingTimer);
         }
         
         this.pingTimer = setInterval(() => {
           if (this.connection.readyState === WebSocket.OPEN) {
+            console.log('Sending ping...');
             this.api.ping().catch(error => {
               console.error('Ping failed:', error);
               if (this.pingTimer) {
@@ -148,6 +157,7 @@ class DerivApiService {
         if (error.message?.toLowerCase().includes('token') || 
             error.message?.toLowerCase().includes('authorize') ||
             error.message?.toLowerCase().includes('invalid')) {
+          console.error('Token validation failed:', error.message);
           throw new Error('Invalid or expired token');
         }
         
@@ -166,15 +176,20 @@ class DerivApiService {
     }
 
     try {
+      console.log('Starting getAccountDetails...');
+      
       // Wait for connection and authorization with timeout
       if (!this.isConnected) {
+        console.log('Waiting for connection...');
         await new Promise<void>((resolve, reject) => {
           const timeout = setTimeout(() => {
+            console.log('Connection timeout reached');
             reject(new Error('Connection timeout'));
           }, 10000);
 
           const checkConnection = setInterval(() => {
             if (this.isConnected) {
+              console.log('Connection established');
               clearInterval(checkConnection);
               clearTimeout(timeout);
               resolve();
@@ -184,20 +199,30 @@ class DerivApiService {
       }
 
       if (this.authorizationPromise) {
+        console.log('Waiting for existing authorization...');
         await this.authorizationPromise;
       } else if (this.token) {
+        console.log('Starting new authorization...');
         await this.authorize();
       }
 
+      console.log('Sending account_list request...');
       const accountListResponse = await this.api.send({
         "account_list": 1
       });
-      console.log('Account list response:', accountListResponse);
+      console.log('Account list response received:', accountListResponse);
 
       if (accountListResponse.error) {
+        console.error('Account list error:', accountListResponse.error);
         throw new Error(accountListResponse.error.message || 'Failed to fetch account list');
       }
 
+      if (!accountListResponse.account_list || !Array.isArray(accountListResponse.account_list)) {
+        console.error('Invalid account list response:', accountListResponse);
+        throw new Error('Invalid account list response format');
+      }
+
+      console.log('Processing account list...');
       const accounts: Account[] = accountListResponse.account_list.map((acc: any) => ({
         loginid: acc.loginid,
         currency: acc.currency,
@@ -205,29 +230,41 @@ class DerivApiService {
         is_virtual: acc.is_virtual
       }));
 
+      console.log('Fetching balances for accounts...');
       const accountsWithBalances: Account[] = [];
       for (const account of accounts) {
         try {
+          console.log(`Fetching balance for account ${account.loginid}...`);
           const balanceResponse = await this.api.balance({ account: account.loginid });
+          
           if (balanceResponse.error) {
             console.error(`Error fetching balance for account ${account.loginid}:`, balanceResponse.error);
             accountsWithBalances.push(account);
             continue;
           }
+
+          if (!balanceResponse.balance || typeof balanceResponse.balance.balance !== 'number') {
+            console.error(`Invalid balance response for account ${account.loginid}:`, balanceResponse);
+            accountsWithBalances.push(account);
+            continue;
+          }
+
           accountsWithBalances.push({
             ...account,
             balance: balanceResponse.balance.balance
           });
+          console.log(`Successfully fetched balance for account ${account.loginid}`);
         } catch (error) {
           console.error(`Error fetching balance for account ${account.loginid}:`, error);
           accountsWithBalances.push(account);
         }
       }
       
+      console.log('Account details fetch completed successfully');
       return accountsWithBalances;
 
     } catch (error: any) {
-      console.error('Error fetching account details:', error);
+      console.error('Error in getAccountDetails:', error);
       if (error.message?.toLowerCase().includes('token') || 
           error.message?.toLowerCase().includes('authorize') ||
           error.message?.toLowerCase().includes('invalid')) {
