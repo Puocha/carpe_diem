@@ -4,34 +4,17 @@
     <meta charset="utf-8">
     <title>Redirecting...</title>
     <script type="text/javascript">
-      // This script is for Single Page Applications (SPAs) on GitHub Pages
-      // using React Router's HashRouter. It handles 404s by redirecting to
-      // the root of the repository, passing the original path and query
-      // parameters into the URL hash.
+      // This script is specifically for HashRouter on GitHub Pages
+      // It handles 404s by redirecting to the index.html, appending the original path and query to the hash
 
-      // Get the current path and query string from the 404 URL
-      const path = window.location.pathname;
-      const query = window.location.search;
+      const segmentCount = 1; // Number of path segments in your base URL (e.g., /carpe_diem is 1 segment)
+      const pathSegments = location.pathname.split('/').filter(s => s.length > 0);
+      const gitHubPagesPath = `/${pathSegments.slice(0, segmentCount).join('/')}`;
 
-      // Your repository name (basename) from package.json homepage
-      const repoName = '/carpe_diem'; // Make sure this matches your basename in package.json
+      const remainingPath = pathSegments.slice(segmentCount).join('/');
+      const newUrl = `${location.protocol}//${location.host}${gitHubPagesPath}/#/${remainingPath}${location.search}${location.hash}`;
 
-      // Construct the new URL for redirection
-      // It will be: https://<USERNAME>.github.io/<REPO_NAME>/#/original-path?original-query
-      let redirectUrl = window.location.origin + repoName + '/';
-
-      // Append the original path and query to the hash part of the URL
-      // Ensure the path part starts with a slash, if it's not empty
-      let hashPart = path.replace(repoName, '');
-      if (hashPart.length > 0 && !hashPart.startsWith('/')) {
-        hashPart = '/' + hashPart;
-      }
-      hashPart += query; // Add the original query parameters
-
-      redirectUrl += '#' + hashPart;
-
-      // Perform the redirect, replacing the current history entry
-      window.location.replace(redirectUrl);
+      window.location.replace(newUrl);
     </script>
   </head>
   <body></body>
