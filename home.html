@@ -52,9 +52,11 @@
             right: 20px;
             cursor: pointer;
             z-index: 1000;
+            display: flex; /* To align icon and text */
+            align-items: center;
         }
         .profile-icon {
-            font-size: 2em; /* Adjust size as needed */
+            font-size: 2em;
             color: #333;
             border: 1px solid #ccc;
             border-radius: 50%;
@@ -65,10 +67,23 @@
             align-items: center;
             background-color: #fff;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-left: 10px; /* Space from the text */
+        }
+        .account-summary {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-right: 10px;
+            color: #333;
+            font-size: 0.9em;
+        }
+        .account-summary .balance {
+            font-weight: bold;
+            font-size: 1.1em;
         }
         .profile-dropdown {
             position: absolute;
-            top: 50px; /* Adjust based on icon size */
+            top: 50px;
             right: 0;
             background-color: #fff;
             border: 1px solid #D9DAD9;
@@ -77,7 +92,7 @@
             padding: 15px;
             min-width: 200px;
             text-align: left;
-            display: none; /* Hidden by default */
+            display: none;
         }
         .profile-dropdown.show {
             display: block;
@@ -118,11 +133,19 @@
             .profile-icon-container {
                 top: 10px;
                 right: 10px;
+                flex-direction: row-reverse; /* Put icon first on small screens */
+            }
+            .account-summary {
+                margin-right: 5px; /* Adjust spacing */
+                align-items: flex-start; /* Align text to left if icon is on the right */
+            }
+            .profile-icon {
+                margin-left: 0; /* No left margin on small screens */
             }
             .profile-dropdown {
                 top: 45px;
                 min-width: unset;
-                width: calc(100% - 40px); /* Adjust width to fit smaller screens */
+                width: calc(100% - 40px);
                 right: 10px;
             }
         }
@@ -130,6 +153,10 @@
 </head>
 <body>
     <div class="profile-icon-container">
+        <div class="account-summary">
+            <span id="header-account-type"></span>
+            <span id="header-account-balance"></span>
+        </div>
         <div class="profile-icon">👤</div>
         <div class="profile-dropdown" id="profile-dropdown">
             <div class="account-details-item">
@@ -159,6 +186,10 @@
             const dropdownAccountBalanceSpan = document.getElementById('dropdown-account-balance');
             const dropdownLogoutBtn = document.getElementById('dropdown-logout-btn');
             const mainLogoutBtn = document.getElementById('main-logout-btn');
+            
+            // New elements for display next to icon
+            const headerAccountTypeSpan = document.getElementById('header-account-type');
+            const headerAccountBalanceSpan = document.getElementById('header-account-balance');
 
             let derivAccounts = JSON.parse(localStorage.getItem('deriv_accounts')) || [];
             let activeAccountIndex = localStorage.getItem('active_deriv_account_index') || 0;
@@ -195,17 +226,30 @@
                             if (response.error) {
                                 console.error('Authorization error:', response.error);
                                 dropdownAccountBalanceSpan.textContent = 'Auth Error';
+                                headerAccountBalanceSpan.textContent = 'Auth Error';
                             } else {
                                 console.log('Authorized successfully for account:', response.authorize.loginid);
+                                // Store account type (real/demo) in the account object
+                                const currentAccount = derivAccounts[activeAccountIndex];
+                                currentAccount.account_type = response.authorize.is_virtual ? 'Demo' : 'Real';
+                                // Update the active account in localStorage to reflect the type
+                                localStorage.setItem('deriv_accounts', JSON.stringify(derivAccounts));
+
                                 // Once authorized, request balance
                                 ws.send(JSON.stringify({ "balance": 1, "account": response.authorize.loginid }));
+                                updateDisplayedAccount(currentAccount); // Update display with type
                             }
                         } else if (response.msg_type === 'balance') {
                             if (response.error) {
                                 console.error('Balance error:', response.error);
                                 dropdownAccountBalanceSpan.textContent = 'Balance Error';
+                                headerAccountBalanceSpan.textContent = 'Balance Error';
                             } else {
-                                dropdownAccountBalanceSpan.textContent = `${response.balance.balance} ${response.balance.currency}`;
+                                const currentAccount = derivAccounts[activeAccountIndex];
+                                currentAccount.balance = response.balance.balance;
+                                currentAccount.currency = response.balance.currency;
+                                localStorage.setItem('deriv_accounts', JSON.stringify(derivAccounts));
+                                updateDisplayedAccount(currentAccount); // Update display with balance
                             }
                         } else if (response.msg_type === 'active_symbols') {
                             // Handle active symbols if needed, but not required for this task
@@ -223,6 +267,7 @@
                     ws.onerror = (error) => {
                         console.error('WebSocket Error', error);
                         dropdownAccountBalanceSpan.textContent = 'WS Error';
+                        headerAccountBalanceSpan.textContent = 'WS Error';
                     };
                 }
 
@@ -241,6 +286,7 @@
                 derivAccounts.forEach((account, index) => {
                     const option = document.createElement('option');
                     option.value = index;
+                    // Display account ID and currency in dropdown
                     option.textContent = `${account.account_id} (${account.currency})`;
                     dropdownAccountSelect.appendChild(option);
                 });
@@ -281,9 +327,15 @@
 
             function updateDisplayedAccount(account) {
                 if (account) {
+                    // Update dropdown details
                     dropdownAccountIdSpan.textContent = account.account_id;
                     dropdownAccountCurrencySpan.textContent = account.currency;
-                    dropdownAccountBalanceSpan.textContent = 'Connecting...'; // Show loading state
+                    dropdownAccountBalanceSpan.textContent = account.balance ? `${account.balance} ${account.currency}` : 'Connecting...';
+
+                    // Update header display
+                    headerAccountTypeSpan.textContent = account.account_type ? `(${account.account_type})` : '';
+                    headerAccountBalanceSpan.textContent = account.balance ? `${account.currency} ${account.balance}` : '';
+
                 }
             }
 
