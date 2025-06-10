@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      // This script takes into account the `homepage` field in package.json
+      // which sets the base URL for the app on GitHub Pages.
+
+      const path = window.location.pathname;
+      const query = window.location.search;
+      const hash = window.location.hash;
+
+      // Your repository name (basename) from package.json homepage
+      const repoName = '/carpe_diem'; // Ensure this matches your basename
+
+      // Correct the path for React Router
+      const correctedPath = path.startsWith(repoName) ? path.substring(repoName.length) : path;
+
+      // Replace the current history entry
+      window.history.replaceState(null, null, correctedPath + query + hash);
+
+      // Redirect to the root of your GitHub Pages site
+      // This will load index.html, and React Router should then pick up the corrected path
+      window.location.replace(window.location.origin + repoName + '/');
+    </script>
+  </head>
+  <body></body>
+</html> 
