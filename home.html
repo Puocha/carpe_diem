@@ -256,8 +256,13 @@
                 });
 
                 profileIconContainer.addEventListener('click', (event) => {
-                    event.stopPropagation();
+                    event.stopPropagation(); // Prevent click from propagating to document
                     profileDropdown.classList.toggle('show');
+                });
+
+                // Prevent clicks inside the dropdown from closing it
+                profileDropdown.addEventListener('click', (event) => {
+                    event.stopPropagation();
                 });
 
                 document.addEventListener('click', (event) => {
