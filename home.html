@@ -10,57 +10,19 @@
             background-color: #e0f2f7;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Align items to the start for top positioning */
+            align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .main-container {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            max-width: 1200px; /* Adjust as needed */
-            gap: 20px;
-        }
-        .header-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 20px; /* Space between header and cards */
+            text-align: center;
+            position: relative; /* Needed for absolute positioning of profile icon */
         }
         .home-container {
             background-color: #fff;
-            padding: 20px;
+            padding: 40px;
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            flex-grow: 1; /* Allow it to take available space */
-        }
-        .account-details {
-            background-color: #fff;
-            padding: 15px 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            text-align: right;
-            margin-left: auto; /* Push to the right */
-        }
-        .account-switcher {
-            margin-bottom: 10px;
-        }
-        .account-switcher label {
-            display: inline-block;
-            margin-right: 5px;
-        }
-        .account-switcher select {
-            padding: 5px;
-            border-radius: 5px;
-            border: 1px solid #D9DAD9;
-        }
-        .current-account-info {
-            font-weight: bold;
-            color: #333;
+            width: 100%;
+            max-width: 500px;
         }
         h1 {
             color: #333;
@@ -68,7 +30,7 @@
         }
         p {
             color: #666;
-            margin-bottom: 10px;
+            margin-bottom: 30px;
         }
         .btn-logout {
             background-color: #dc3545;
@@ -79,169 +41,198 @@
             cursor: pointer;
             font-size: 1em;
             transition: background-color 0.3s ease;
-            margin-top: 20px; /* Space above logout button */
         }
         .btn-logout:hover {
             background-color: #c82333;
         }
-
-        /* Card Layout */
-        .cards-container {
-            display: flex;
-            flex-wrap: wrap; /* Allow cards to wrap to the next line */
-            gap: 20px;
-            width: 100%;
-            justify-content: center; /* Center cards horizontally */
+        /* Profile Icon and Dropdown Styles */
+        .profile-icon-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            z-index: 1000;
         }
-        .card {
-            background-color: #000; /* Black background as per image */
-            border: 2px solid #00f2f7; /* Blue border as per image */
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            color: #fff; /* White text for contrast */
-            text-align: center;
+        .profile-icon {
+            font-size: 2em; /* Adjust size as needed */
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-
-        .card-header {
-            background-color: #fff; /* White background for header text */
-            color: #000; /* Black text */
-            padding: 5px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-weight: bold;
+        .profile-dropdown {
+            position: absolute;
+            top: 50px; /* Adjust based on icon size */
+            right: 0;
+            background-color: #fff;
+            border: 1px solid #D9DAD9;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            min-width: 200px;
+            text-align: left;
+            display: none; /* Hidden by default */
         }
-
-        /* Specific card sizing */
-        .card.trading-details {
-            width: calc(30% - 20px); /* Approximately 1/3 width, accounting for gap */
-            min-height: 200px;
+        .profile-dropdown.show {
+            display: block;
         }
-        .card.trading-history {
-            width: calc(70% - 20px); /* Approximately 2/3 width, accounting for gap */
-            min-height: 200px;
+        .profile-dropdown p {
+            margin: 5px 0;
+            color: #333;
+            font-size: 0.95em;
         }
-        .card.ticks-setting {
-            width: calc(30% - 20px);
-            min-height: 200px;
-        }
-        .card.trade-ticks {
-            width: calc(100% - 20px); /* Full width */
-            min-height: 250px;
-        }
-        .card.logging-window {
-            width: calc(100% - 20px); /* Full width */
-            min-height: 250px;
-        }
-
-        /* Adjusting for two columns in the top row */
-        .top-row-cards {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
+        .profile-dropdown select {
             width: 100%;
-            justify-content: center;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #D9DAD9;
+            border-radius: 5px;
+        }
+        .profile-dropdown .account-details-item {
+            margin-bottom: 8px;
+        }
+        .profile-dropdown .logout-btn-dropdown {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .profile-dropdown .logout-btn-dropdown:hover {
+            background-color: #c82333;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .profile-icon-container {
+                top: 10px;
+                right: 10px;
+            }
+            .profile-dropdown {
+                top: 45px;
+                min-width: unset;
+                width: calc(100% - 40px); /* Adjust width to fit smaller screens */
+                right: 10px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="main-container">
-        <div class="header-section">
-            <div class="home-container">
-                <h1>Welcome to Carpe Diem!</h1>
-                <p>You have successfully logged in.</p>
-                <button class="btn-logout" id="logout-btn">Logout</button>
+    <div class="profile-icon-container">
+        <div class="profile-icon">👤</div>
+        <div class="profile-dropdown" id="profile-dropdown">
+            <div class="account-details-item">
+                <p>Account ID: <span id="dropdown-account-id"></span></p>
+                <p>Currency: <span id="dropdown-account-currency"></span></p>
+                <p>Balance: <span id="dropdown-account-balance">Loading...</span></p>
             </div>
-            <div class="account-details">
-                <p class="current-account-info">Account ID: <span id="current-account-id"></span></p>
-                <p class="current-account-info">Currency: <span id="current-account-currency"></span></p>
-                <div class="account-switcher">
-                    <label for="account-select">Select Account:</label>
-                    <select id="account-select"></select>
-                </div>
-            </div>
+            <label for="dropdown-account-select">Switch Account:</label>
+            <select id="dropdown-account-select"></select>
+            <button class="logout-btn-dropdown" id="dropdown-logout-btn">Logout</button>
         </div>
+    </div>
 
-        <div class="cards-container">
-            <div class="top-row-cards">
-                <div class="card trading-details">
-                    <div class="card-header">Trading Details</div>
-                    <!-- Content for Trading Details -->
-                </div>
-                <div class="card trading-history">
-                    <div class="card-header">Trading History Table</div>
-                    <!-- Content for Trading History Table -->
-                </div>
-            </div>
-
-            <div class="top-row-cards">
-                <div class="card ticks-setting">
-                    <div class="card-header">Ticks Setting</div>
-                    <!-- Content for Ticks Setting -->
-                </div>
-            </div>
-
-            <div class="card trade-ticks">
-                <div class="card-header">Trade Ticks</div>
-                <!-- Content for Trade Ticks -->
-            </div>
-
-            <div class="card logging-window">
-                <div class="card-header">Logging Window</div>
-                <!-- Content for Logging Window -->
-            </div>
-        </div>
+    <div class="home-container">
+        <h1>Welcome to Carpe Diem!</h1>
+        <p>You have successfully logged in.</p>
+        <!-- Account display moved to profile dropdown -->
+        <button class="btn-logout" id="main-logout-btn">Logout</button>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const logoutBtn = document.getElementById('logout-btn');
-            const accountSelect = document.getElementById('account-select');
-            const currentAccountIdSpan = document.getElementById('current-account-id');
-            const currentAccountCurrencySpan = document.getElementById('current-account-currency');
+            const profileIconContainer = document.querySelector('.profile-icon-container');
+            const profileDropdown = document.getElementById('profile-dropdown');
+            const dropdownAccountSelect = document.getElementById('dropdown-account-select');
+            const dropdownAccountIdSpan = document.getElementById('dropdown-account-id');
+            const dropdownAccountCurrencySpan = document.getElementById('dropdown-account-currency');
+            const dropdownAccountBalanceSpan = document.getElementById('dropdown-account-balance');
+            const dropdownLogoutBtn = document.getElementById('dropdown-logout-btn');
+            const mainLogoutBtn = document.getElementById('main-logout-btn');
 
             let derivAccounts = JSON.parse(localStorage.getItem('deriv_accounts')) || [];
+            let activeAccountIndex = localStorage.getItem('active_deriv_account_index') || 0;
+
+            // Ensure activeAccountIndex is within bounds
+            if (activeAccountIndex >= derivAccounts.length) {
+                activeAccountIndex = 0;
+                localStorage.setItem('active_deriv_account_index', 0); // Reset if out of bounds
+            }
 
             if (derivAccounts.length > 0) {
+                // Populate the dropdown with accounts
                 derivAccounts.forEach((account, index) => {
                     const option = document.createElement('option');
                     option.value = index;
                     option.textContent = `${account.account_id} (${account.currency})`;
-                    accountSelect.appendChild(option);
+                    dropdownAccountSelect.appendChild(option);
                 });
 
-                let activeAccountIndex = localStorage.getItem('active_deriv_account_index') || 0;
-                if (activeAccountIndex >= derivAccounts.length) {
-                    activeAccountIndex = 0;
-                }
-                accountSelect.value = activeAccountIndex;
+                dropdownAccountSelect.value = activeAccountIndex;
                 updateDisplayedAccount(derivAccounts[activeAccountIndex]);
 
-                accountSelect.addEventListener('change', (event) => {
+                dropdownAccountSelect.addEventListener('change', (event) => {
                     const selectedIndex = event.target.value;
                     localStorage.setItem('active_deriv_account_index', selectedIndex);
                     updateDisplayedAccount(derivAccounts[selectedIndex]);
                 });
 
+                // Toggle profile dropdown visibility
+                profileIconContainer.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent click from propagating to document
+                    profileDropdown.classList.toggle('show');
+                });
+
+                // Close dropdown if clicked outside
+                document.addEventListener('click', (event) => {
+                    if (!profileIconContainer.contains(event.target) && profileDropdown.classList.contains('show')) {
+                        profileDropdown.classList.remove('show');
+                    }
+                });
+
             } else {
+                // No accounts found, redirect to login
                 window.location.href = 'index.html';
             }
 
             function updateDisplayedAccount(account) {
                 if (account) {
-                    currentAccountIdSpan.textContent = account.account_id;
-                    currentAccountCurrencySpan.textContent = account.currency;
+                    dropdownAccountIdSpan.textContent = account.account_id;
+                    dropdownAccountCurrencySpan.textContent = account.currency;
+                    // Placeholder for balance - in a real app, you'd fetch this using the token
+                    dropdownAccountBalanceSpan.textContent = 'Fetching...';
+
+                    // *** IMPORTANT: Integrate Deriv API to fetch real balance here ***
+                    // Example (pseudo-code - replace with actual Deriv API logic):
+                    // fetchBalance(account.token).then(balance => {
+                    //     dropdownAccountBalanceSpan.textContent = `${balance} ${account.currency}`;
+                    // }).catch(error => {
+                    //     dropdownAccountBalanceSpan.textContent = 'Error';
+                    //     console.error('Error fetching balance:', error);
+                    // });
+                    dropdownAccountBalanceSpan.textContent = `(mock) 1000.00`; // Mock balance for demonstration
                 }
             }
 
-            logoutBtn.addEventListener('click', () => {
+            // Logout functionality
+            dropdownLogoutBtn.addEventListener('click', performLogout);
+            mainLogoutBtn.addEventListener('click', performLogout);
+
+            function performLogout() {
                 localStorage.removeItem('deriv_accounts');
                 localStorage.removeItem('active_deriv_account_index');
                 window.location.href = 'index.html';
-            });
+            }
         });
     </script>
 </body>
