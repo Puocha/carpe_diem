@@ -13,10 +13,13 @@ const Dashboard: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<string>('Connecting...');
 
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setConnectionStatus('Connecting to Deriv...');
+    
     try {
       const token = localStorage.getItem('deriv_token');
       if (!token) {
@@ -24,15 +27,34 @@ const Dashboard: React.FC = () => {
         setLoading(false);
         return;
       }
+
+      setConnectionStatus('Authorizing...');
       derivApiService.setToken(token);
+      
+      setConnectionStatus('Fetching account details...');
       const fetchedAccounts = await derivApiService.getAccountDetails();
-      setAccounts(fetchedAccounts);
-      if (fetchedAccounts.length > 0) {
-        setSelectedAccount(fetchedAccounts[0]); // Select the first account by default
+      
+      if (fetchedAccounts.length === 0) {
+        setError('No accounts found. Please check your Deriv account.');
+        setLoading(false);
+        return;
       }
-    } catch (err) {
+
+      setAccounts(fetchedAccounts);
+      setSelectedAccount(fetchedAccounts[0]);
+      setConnectionStatus('');
+    } catch (err: any) {
       console.error('Failed to fetch accounts:', err);
-      setError('Failed to load account information.');
+      let errorMessage = 'Failed to load account information.';
+      
+      if (err.message?.includes('token')) {
+        errorMessage = 'Your session has expired. Please log in again.';
+        localStorage.removeItem('deriv_token');
+      } else if (err.message?.includes('timeout')) {
+        errorMessage = 'Connection timed out. Please check your internet connection and try again.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -48,16 +70,25 @@ const Dashboard: React.FC = () => {
     if (accountToSwitch) {
       setLoading(true);
       setError(null);
+      setConnectionStatus('Switching account...');
+      
       try {
         await derivApiService.switchAccount(newLoginId);
         setSelectedAccount(accountToSwitch);
-        // Re-fetch accounts to ensure balances are updated after switch
-        await fetchAccounts(); 
-      } catch (err) {
+        await fetchAccounts();
+      } catch (err: any) {
         console.error('Failed to switch account:', err);
-        setError('Failed to switch account.');
+        let errorMessage = 'Failed to switch account.';
+        
+        if (err.message?.includes('token')) {
+          errorMessage = 'Your session has expired. Please log in again.';
+          localStorage.removeItem('deriv_token');
+        }
+        
+        setError(errorMessage);
       } finally {
         setLoading(false);
+        setConnectionStatus('');
       }
     }
   };
@@ -65,7 +96,10 @@ const Dashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="dashboard-container">
-        <p>Loading account details...</p>
+        <div className="loading-container">
+          <p>{connectionStatus || 'Loading account details...'}</p>
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+        </div>
       </div>
     );
   }
@@ -73,8 +107,10 @@ const Dashboard: React.FC = () => {
   if (error) {
     return (
       <div className="dashboard-container">
-        <p style={{ color: 'red' }}>Error: {error}</p>
-        <button onClick={fetchAccounts}>Retry</button>
+        <div className="error-container">
+          <p style={{ color: 'red' }}>Error: {error}</p>
+          <button onClick={fetchAccounts}>Retry</button>
+        </div>
       </div>
     );
   }
@@ -97,10 +133,11 @@ const Dashboard: React.FC = () => {
         )}
       </div>
       <div className="content">
-        <p>You are here.</p>
         {selectedAccount && (
-          <div>
-            <p>Selected Account: {selectedAccount.loginid} ({selectedAccount.is_virtual ? 'Virtual' : 'Real'})</p>
+          <div className="account-details">
+            <h2>Account Details</h2>
+            <p>Account ID: {selectedAccount.loginid}</p>
+            <p>Account Type: {selectedAccount.is_virtual ? 'Virtual' : 'Real'}</p>
             <p>Balance: {selectedAccount.currency} {selectedAccount.balance.toFixed(2)}</p>
           </div>
         )}
