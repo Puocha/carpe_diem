@@ -44,27 +44,84 @@
         .btn-logout:hover {
             background-color: #c82333;
         }
+        .account-switcher {
+            margin-bottom: 20px;
+        }
+        .account-switcher label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .account-switcher select {
+            padding: 5px;
+        }
+        .account-switcher p {
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="home-container">
         <h1>Welcome to Carpe Diem!</h1>
         <p>You have successfully logged in.</p>
+        <div class="account-switcher">
+            <label for="account-select">Select Account:</label>
+            <select id="account-select"></select>
+            <p>Current Account: <span id="current-account-id"></span> (<span id="current-account-currency"></span>)</p>
+        </div>
         <button class="btn-logout" id="logout-btn">Logout</button>
     </div>
     <script>
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            localStorage.removeItem('deriv_token');
-            window.location.href = 'index.html';
-        });
+        document.addEventListener('DOMContentLoaded', () => {
+            const logoutBtn = document.getElementById('logout-btn');
+            const accountSelect = document.getElementById('account-select');
+            const currentAccountIdSpan = document.getElementById('current-account-id');
+            const currentAccountCurrencySpan = document.getElementById('current-account-currency');
 
-        // Optional: Display the token (for demonstration, remove in production)
-        const token = localStorage.getItem('deriv_token');
-        if (token) {
-            const tokenDisplay = document.createElement('p');
-            tokenDisplay.textContent = `Your Deriv token (for demonstration): ${token.substring(0, 10)}...`;
-            document.querySelector('.home-container').insertBefore(tokenDisplay, document.getElementById('logout-btn'));
-        }
+            let derivAccounts = JSON.parse(localStorage.getItem('deriv_accounts')) || [];
+
+            if (derivAccounts.length > 0) {
+                // Populate the dropdown with accounts
+                derivAccounts.forEach((account, index) => {
+                    const option = document.createElement('option');
+                    option.value = index; // Use index as value for easy lookup
+                    option.textContent = `${account.account_id} (${account.currency})`;
+                    accountSelect.appendChild(option);
+                });
+
+                // Set initial displayed account (e.g., the first one or a saved active account)
+                let activeAccountIndex = localStorage.getItem('active_deriv_account_index') || 0;
+                if (activeAccountIndex >= derivAccounts.length) {
+                    activeAccountIndex = 0; // Fallback if stored index is out of bounds
+                }
+                accountSelect.value = activeAccountIndex;
+                updateDisplayedAccount(derivAccounts[activeAccountIndex]);
+
+                // Add event listener for account switching
+                accountSelect.addEventListener('change', (event) => {
+                    const selectedIndex = event.target.value;
+                    localStorage.setItem('active_deriv_account_index', selectedIndex);
+                    updateDisplayedAccount(derivAccounts[selectedIndex]);
+                });
+
+            } else {
+                // No accounts found, redirect to login
+                window.location.href = 'index.html';
+            }
+
+            function updateDisplayedAccount(account) {
+                if (account) {
+                    currentAccountIdSpan.textContent = account.account_id;
+                    currentAccountCurrencySpan.textContent = account.currency;
+                    // In a real app, you would now use account.token to make API calls
+                }
+            }
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('deriv_accounts');
+                localStorage.removeItem('active_deriv_account_index'); // Clear active account preference
+                window.location.href = 'index.html';
+            });
+        });
     </script>
 </body>
 </html> 
