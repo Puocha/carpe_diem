@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import './App.css';
 import OAuthCallback from './OAuthCallback';
+import Dashboard from './Dashboard';
 
 function App() {
   const handleDerivLogin = () => {
@@ -28,6 +29,7 @@ function App() {
           </div>
         } />
         <Route path="/oauth-callback" element={<OAuthCallback />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </div>
   );

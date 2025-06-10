@@ -11,7 +11,7 @@ const OAuthCallback: React.FC = () => {
     if (token) {
       localStorage.setItem('deriv_token', token);
       alert('Login successful!'); // For demonstration, you might redirect to a dashboard
-      navigate('/'); // Redirect to home or a dashboard after login
+      navigate('/dashboard'); // Redirect to dashboard after login
     } else {
       alert('Login failed or no token received.');
       navigate('/'); // Redirect to home or login on failure
