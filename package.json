@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "https://puocha.github.io/carpe_diem/",
   "dependencies": {
+    "@deriv/deriv-api": "^1.0.15",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",

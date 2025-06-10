@@ -142,3 +142,72 @@ code {
   color: #00bfff;
   text-decoration: none;
 }
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #282c34; /* Dark background similar to login */
+  color: white;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.dashboard-container .header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+}
+
+.dashboard-container .header h1 {
+  margin: 0;
+  font-size: 1.8em;
+}
+
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-info label {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.account-info select {
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #00bfff;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 0.9em;
+  cursor: pointer;
+  outline: none;
+}
+
+.account-info select option {
+  background-color: #282c34;
+  color: white;
+}
+
+.dashboard-container .content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+.dashboard-container .content p {
+  margin: 5px 0;
+}
