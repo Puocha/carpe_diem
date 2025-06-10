@@ -106,29 +106,61 @@ p {
     justify-content: space-between;
 }
 
+/* Update the form-group styles */
 .form-group {
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: space-between;
-    width: calc(33.33% - 6px);
-    flex-grow: 1;
-    box-sizing: border-box;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 .form-group label {
-    flex-basis: 45%;
-    text-align: left;
-    font-size: 0.85em;
-    color: #555;
+    font-size: 0.9em;
+    color: #666;
+    min-width: 120px; /* Fixed width for labels to align them */
+    text-align: right; /* Align text to the right for better readability */
 }
 
-.form-group input[type="number"] {
-    flex-basis: 50%;
-    padding: 6px;
-    border: 1px solid #D9DAD9;
-    border-radius: 5px;
-    font-size: 0.85em;
-    text-align: right;
+.form-group input {
+    flex: 1; /* Take remaining space */
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Special handling for checkbox group */
+.checkbox-group {
+    justify-content: flex-start;
+}
+
+.checkbox-group label {
+    min-width: auto;
+    margin-left: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .form-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form-group label {
+        min-width: 100%;
+        text-align: left;
+        margin-bottom: 5px;
+    }
+
+    .form-group input {
+        width: 100%;
+    }
+
+    .checkbox-group {
+        flex-direction: row;
+    }
 }
 
 .form-group.checkbox-group {
