@@ -1,6 +1,4 @@
 declare module '@deriv/deriv-api/dist/DerivAPIBasic' {
-  import WebSocket from 'ws';
-
   interface ConnectionOptions {
     connection: WebSocket;
   }
