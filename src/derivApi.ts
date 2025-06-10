@@ -18,6 +18,7 @@ class DerivApiService {
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private isConnected: boolean = false; // Track connection status
+  private authorizationPromise: Promise<any> | null = null; // To track ongoing authorization
 
   constructor() {
     this.connect();
@@ -25,27 +26,28 @@ class DerivApiService {
 
   private connect() {
     if (this.connection && (this.connection.readyState === WebSocket.OPEN || this.connection.readyState === WebSocket.CONNECTING)) {
+        console.log('Connection already open or connecting. Skipping new connection.');
         return; // Already connected or connecting
     }
     console.log('Attempting to establish Deriv WebSocket connection...');
     this.connection = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
     this.api = new DerivAPIBasic({ connection: this.connection });
 
-    this.connection.onopen = () => {
+    this.connection.onopen = async () => {
       console.log('Deriv WebSocket connection established.');
       this.isConnected = true;
       if (this.reconnectTimeout) {
         clearTimeout(this.reconnectTimeout);
         this.reconnectTimeout = null;
       }
-      // Authorize only if token is already available
+      // Attempt authorization if a token is available
       if (this.token) {
-        this.authorize();
+        await this.authorize();
       }
     };
 
-    this.connection.onclose = () => {
-      console.log('Deriv WebSocket connection closed.');
+    this.connection.onclose = (event) => {
+      console.log(`Deriv WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}`);
       this.isConnected = false;
       if (this.pingTimer) {
         clearInterval(this.pingTimer);
@@ -72,6 +74,8 @@ class DerivApiService {
   }
 
   public setToken(token: string) {
+    if (this.token === token) return; // Token hasn't changed
+
     this.token = token;
     if (this.isConnected) {
       this.authorize();
@@ -80,28 +84,40 @@ class DerivApiService {
 
   private async authorize(): Promise<any> {
     if (!this.token) {
-      console.warn('No token available for authorization.');
+      console.warn('No token available for authorization. Skipping authorization.');
+      this.authorizationPromise = null; // Clear promise if no token
       return null;
     }
-    
-    console.log('Authorizing with token...');
-    try {
-      const response = await this.api.authorize(this.token);
-      console.log('Authorization successful:', response);
 
-      // Start pinging after successful authorization
-      if (this.pingTimer) {
-        clearInterval(this.pingTimer);
-      }
-      this.pingTimer = setInterval(() => {
-        this.api.ping();
-      }, PING_INTERVAL);
-
-      return response;
-    } catch (error) {
-      console.error('Authorization failed:', error);
-      throw error;
+    if (this.authorizationPromise) {
+      console.log('Authorization already in progress. Awaiting existing promise.');
+      return this.authorizationPromise; // Return existing promise if already authorizing
     }
+    
+    console.log('Starting authorization with token...');
+    this.authorizationPromise = new Promise(async (resolve, reject) => {
+      try {
+        const response = await this.api.authorize(this.token!);
+        console.log('Authorization successful:', response);
+
+        // Start pinging after successful authorization
+        if (this.pingTimer) {
+          clearInterval(this.pingTimer);
+        }
+        this.pingTimer = setInterval(() => {
+          if (this.connection.readyState === WebSocket.OPEN) {
+              this.api.ping();
+          }
+        }, PING_INTERVAL);
+        resolve(response);
+      } catch (error) {
+        console.error('Authorization failed:', error);
+        reject(error);
+      } finally {
+        this.authorizationPromise = null; // Clear promise after completion
+      }
+    });
+    return this.authorizationPromise;
   }
 
   public async getAccountDetails(): Promise<Account[]> {
@@ -110,8 +126,25 @@ class DerivApiService {
       return [];
     }
     
-    // Ensure authorization before fetching details
-    await this.authorize();
+    // Ensure authorization completes before fetching details
+    if (!this.isConnected) {
+        // Wait for connection to establish and potentially authorize
+        await new Promise<void>(resolve => {
+            const checkConnection = setInterval(() => {
+                if (this.isConnected) {
+                    clearInterval(checkConnection);
+                    resolve();
+                }
+            }, 100);
+        });
+    }
+
+    if (this.authorizationPromise) {
+        await this.authorizationPromise;
+    } else {
+        // If not already authorizing, initiate authorization
+        await this.authorize();
+    }
 
     try {
       const accountListResponse = await this.api.send({
@@ -128,6 +161,7 @@ class DerivApiService {
 
       const accountsWithBalances: Account[] = [];
       for (const account of accounts) {
+        // Ensure the token is still valid for this account before fetching balance
         const balanceResponse = await this.api.balance({ account: account.loginid });
         accountsWithBalances.push({
           ...account,
@@ -176,7 +210,10 @@ class DerivApiService {
         clearInterval(this.pingTimer);
         this.pingTimer = null;
     }
-    this.connection.close();
+    if (this.connection) {
+        this.connection.close();
+    }
+    this.isConnected = false; // Set connection status to false on explicit disconnect
   }
 }
 
