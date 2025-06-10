@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // DOM Elements
     const profileIconContainer = document.querySelector('.profile-icon-container');
     const profileDropdown = document.getElementById('profile-dropdown');
     const dropdownAccountSelect = document.getElementById('dropdown-account-select');
@@ -6,11 +7,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropdownAccountCurrencySpan = document.getElementById('dropdown-account-currency');
     const dropdownAccountBalanceSpan = document.getElementById('dropdown-account-balance');
     const dropdownLogoutBtn = document.getElementById('dropdown-logout-btn');
-    
-    // New elements for display next to icon
     const headerAccountTypeSpan = document.getElementById('header-account-type');
     const headerAccountBalanceSpan = document.getElementById('header-account-balance');
-
+    
+    // Event Listeners
+    profileIconContainer.addEventListener('click', (event) => {
+        event.stopPropagation();
+        profileDropdown.classList.toggle('show');
+    });
+    
+    profileDropdown.addEventListener('click', (event) => {
+        event.stopPropagation();
+    });
+    
+    document.addEventListener('click', (event) => {
+        if (!profileIconContainer.contains(event.target) && profileDropdown.classList.contains('show')) {
+            profileDropdown.classList.remove('show');
+        }
+    });
+    
     let derivAccounts = JSON.parse(localStorage.getItem('deriv_accounts')) || [];
     let activeAccountIndex = localStorage.getItem('active_deriv_account_index') || 0;
 
@@ -171,4 +186,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         window.location.href = 'index.html';
     }
-}); 
+});
