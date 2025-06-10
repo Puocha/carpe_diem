@@ -1,24 +1,27 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 function App() {
+  const handleDerivLogin = () => {
+    const app_id = 'YOUR_APP_ID'; // Replace with your actual Deriv App ID
+    window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${app_id}`;
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
+      <div className="login-card">
+        <h2>Login</h2>
+        
+        <button className="sign-in-button" onClick={handleDerivLogin}>Login with Deriv</button>
+        <p className="or-continue-with">or continue with</p>
+        <button className="google-sign-in">
+          <img src="https://img.icons8.com/color/16/000000/google-logo.png" alt="Google logo" />
+          
+        </button>
+        <p className="register-text">
+          Don't have an account yet? <a href="#">Register for free</a>
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      </div>
     </div>
   );
 }
