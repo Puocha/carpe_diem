@@ -5,7 +5,14 @@ const OAuthCallback: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    // Extract path and query parameters from the hash
+    const hash = window.location.hash;
+    const hashContent = hash.substring(1); // Remove the leading #
+    const hashParts = hashContent.split('?');
+    const pathInHash = hashParts[0];
+    const queryInHash = hashParts.length > 1 ? hashParts[1] : '';
+
+    const params = new URLSearchParams(queryInHash);
     const token = params.get('token1'); // Assuming token1 is the session token
 
     if (token) {
