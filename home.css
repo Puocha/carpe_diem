@@ -145,132 +145,156 @@ p {
 
 /* Profile Icon and Dropdown Styles */
 .profile-icon-container {
-    position: absolute;
+    position: fixed;
     top: 20px;
     right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     cursor: pointer;
     z-index: 1000;
-    display: flex;
-    align-items: center;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
-.profile-icon {
-    font-size: 2em;
-    color: #333;
-    border: 1px solid #ccc;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-left: 10px;
-}
+
 .account-summary {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    margin-right: 10px;
-    color: #333;
-    font-size: 0.9em;
 }
-.account-summary .balance {
-    font-weight: bold;
-    font-size: 1.1em;
+
+.profile-icon {
+    font-size: 24px;
+    padding: 5px;
 }
+
 .profile-dropdown {
-    position: absolute;
-    top: 50px;
-    right: 0;
-    background-color: #fff;
-    border: 1px solid #D9DAD9;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    padding: 15px;
-    min-width: 200px;
-    text-align: left;
     display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 15px;
+    min-width: 250px;
+    margin-top: 10px;
 }
+
 .profile-dropdown.show {
     display: block;
 }
-.profile-dropdown p {
-    margin: 5px 0;
-    color: #333;
-    font-size: 0.95em;
-}
-.profile-dropdown select {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #D9DAD9;
-    border-radius: 5px;
-}
-.profile-dropdown .account-details-item {
-    margin-bottom: 8px;
-}
-.profile-dropdown .logout-btn-dropdown {
-    background-color: #dc3545;
-    color: white;
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9em;
-    width: 100%;
-    text-align: center;
-    margin-top: 10px;
-}
-.profile-dropdown .logout-btn-dropdown:hover {
-    background-color: #c82333;
+
+.account-details-item {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
 }
 
-/* Responsive adjustments */
+.account-details-item p {
+    margin: 5px 0;
+    color: #333;
+}
+
+#dropdown-account-select {
+    width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.logout-btn-dropdown {
+    width: 100%;
+    padding: 10px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* Responsive Container Layouts */
+.container {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.input-group-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    width: 100%;
+    padding: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+}
+
+.form-group label {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.checkbox-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Responsive Layout */
 @media (max-width: 768px) {
     .main-content {
         flex-direction: column;
     }
-    .left-column, .right-column {
-        width: 100%;
-        margin-right: 0;
-        margin-bottom: 20px;
-    }
-    .bottom-container {
-        width: 100%;
-        margin-bottom: 20px;
-    }
-}
 
-@media (max-width: 600px) {
+    .left-column,
+    .right-column {
+        width: 100%;
+        margin: 0 0 20px 0;
+    }
+
+    .input-group-container {
+        grid-template-columns: 1fr;
+    }
+
     .profile-icon-container {
         top: 10px;
         right: 10px;
-        flex-direction: row-reverse;
     }
-    .account-summary {
-        margin-right: 5px;
-        align-items: flex-start;
-    }
-    .profile-icon {
-        margin-left: 0;
-    }
+
     .profile-dropdown {
-        top: 45px;
-        min-width: unset;
-        width: calc(100% - 40px);
-        right: 10px;
+        width: calc(100vw - 40px);
+        right: -10px;
     }
 }
 
-@media (max-width: 900px) {
-    .form-group {
-        width: calc(50% - 10px); /* 2 per row on medium screens */
+@media (max-width: 480px) {
+    .main-wrapper {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .form-group input {
+        font-size: 16px; /* Prevents zoom on mobile */
     }
 }
-
-@media (max-width: 600px) {
-    .form-group {
-        width: 100%; /* 1 per row on small screens */
-    }
-} 
