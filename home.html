@@ -172,7 +172,6 @@
 
     <div class="home-container">
         <!-- Content removed as per user request -->
-        <button class="btn-logout" id="main-logout-btn">Logout</button>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -183,7 +182,6 @@
             const dropdownAccountCurrencySpan = document.getElementById('dropdown-account-currency');
             const dropdownAccountBalanceSpan = document.getElementById('dropdown-account-balance');
             const dropdownLogoutBtn = document.getElementById('dropdown-logout-btn');
-            const mainLogoutBtn = document.getElementById('main-logout-btn');
             
             // New elements for display next to icon
             const headerAccountTypeSpan = document.getElementById('header-account-type');
@@ -339,7 +337,6 @@
 
             // Logout functionality
             dropdownLogoutBtn.addEventListener('click', performLogout);
-            mainLogoutBtn.addEventListener('click', performLogout);
 
             function performLogout() {
                 logoutInitiated = true; // Set flag to prevent reconnect
