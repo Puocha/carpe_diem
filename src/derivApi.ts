@@ -3,6 +3,7 @@ import DerivAPIBasic from '@deriv/deriv-api/dist/DerivAPIBasic';
 const APP_ID = '71979'; // Your Deriv App ID
 const RECONNECT_INTERVAL = 1000; // 1 second
 const PING_INTERVAL = 30000; // 30 seconds
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 interface Account {
   loginid: string;
@@ -17,64 +18,82 @@ class DerivApiService {
   private token: string | null = null;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private pingTimer: ReturnType<typeof setInterval> | null = null;
-  private isConnected: boolean = false; // Track connection status
-  private authorizationPromise: Promise<any> | null = null; // To track ongoing authorization
+  private isConnected: boolean = false;
+  private authorizationPromise: Promise<any> | null = null;
+  private reconnectAttempts: number = 0;
+  private isConnecting: boolean = false;
 
   constructor() {
     this.connect();
   }
 
   private connect() {
-    if (this.connection && (this.connection.readyState === WebSocket.OPEN || this.connection.readyState === WebSocket.CONNECTING)) {
-        console.log('Connection already open or connecting. Skipping new connection.');
-        return; // Already connected or connecting
+    if (this.isConnecting) {
+      console.log('Connection attempt already in progress. Skipping new connection.');
+      return;
     }
+
+    if (this.connection && (this.connection.readyState === WebSocket.OPEN || this.connection.readyState === WebSocket.CONNECTING)) {
+      console.log('Connection already open or connecting. Skipping new connection.');
+      return;
+    }
+
+    this.isConnecting = true;
     console.log('Attempting to establish Deriv WebSocket connection...');
-    this.connection = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
-    this.api = new DerivAPIBasic({ connection: this.connection });
+    
+    try {
+      this.connection = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
+      this.api = new DerivAPIBasic({ connection: this.connection });
 
-    this.connection.onopen = async () => {
-      console.log('Deriv WebSocket connection established.');
-      this.isConnected = true;
-      if (this.reconnectTimeout) {
-        clearTimeout(this.reconnectTimeout);
-        this.reconnectTimeout = null;
-      }
-      // Attempt authorization if a token is available
-      if (this.token) {
-        await this.authorize();
-      }
-    };
+      this.connection.onopen = async () => {
+        console.log('Deriv WebSocket connection established.');
+        this.isConnected = true;
+        this.isConnecting = false;
+        this.reconnectAttempts = 0;
+        
+        if (this.reconnectTimeout) {
+          clearTimeout(this.reconnectTimeout);
+          this.reconnectTimeout = null;
+        }
 
-    this.connection.onclose = (event) => {
-      console.log(`Deriv WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}`);
-      this.isConnected = false;
-      if (this.pingTimer) {
-        clearInterval(this.pingTimer);
-        this.pingTimer = null;
-      }
-      // Attempt to reconnect after a delay
-      if (!this.reconnectTimeout) {
-        this.reconnectTimeout = setTimeout(() => this.connect(), RECONNECT_INTERVAL);
-      }
-    };
+        if (this.token) {
+          await this.authorize();
+        }
+      };
 
-    this.connection.onerror = (error) => {
-      console.error('Deriv WebSocket error:', error);
-      this.isConnected = false;
-      if (this.pingTimer) {
-        clearInterval(this.pingTimer);
-        this.pingTimer = null;
-      }
-      // Attempt to reconnect after a delay
-      if (!this.reconnectTimeout) {
-        this.reconnectTimeout = setTimeout(() => this.connect(), RECONNECT_INTERVAL);
-      }
-    };
+      this.connection.onclose = (event) => {
+        console.log(`Deriv WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}`);
+        this.isConnected = false;
+        this.isConnecting = false;
+        
+        if (this.pingTimer) {
+          clearInterval(this.pingTimer);
+          this.pingTimer = null;
+        }
+
+        if (this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          this.reconnectAttempts++;
+          if (!this.reconnectTimeout) {
+            this.reconnectTimeout = setTimeout(() => this.connect(), RECONNECT_INTERVAL);
+          }
+        } else {
+          console.error('Max reconnection attempts reached. Please refresh the page.');
+        }
+      };
+
+      this.connection.onerror = (error) => {
+        console.error('Deriv WebSocket error:', error);
+        this.isConnected = false;
+        this.isConnecting = false;
+      };
+    } catch (error) {
+      console.error('Error creating WebSocket connection:', error);
+      this.isConnecting = false;
+    }
   }
 
   public setToken(token: string) {
-    if (this.token === token) return; // Token hasn't changed
+    if (this.token === token) return;
 
     this.token = token;
     if (this.isConnected) {
@@ -85,13 +104,13 @@ class DerivApiService {
   private async authorize(): Promise<any> {
     if (!this.token) {
       console.warn('No token available for authorization. Skipping authorization.');
-      this.authorizationPromise = null; // Clear promise if no token
+      this.authorizationPromise = null;
       return null;
     }
 
     if (this.authorizationPromise) {
       console.log('Authorization already in progress. Awaiting existing promise.');
-      return this.authorizationPromise; // Return existing promise if already authorizing
+      return this.authorizationPromise;
     }
     
     console.log('Starting authorization with token...');
@@ -100,23 +119,32 @@ class DerivApiService {
         const response = await this.api.authorize(this.token!);
         console.log('Authorization successful:', response);
 
-        // Start pinging after successful authorization
         if (this.pingTimer) {
           clearInterval(this.pingTimer);
         }
+        
         this.pingTimer = setInterval(() => {
           if (this.connection.readyState === WebSocket.OPEN) {
-              this.api.ping();
+            this.api.ping().catch(error => {
+              console.error('Ping failed:', error);
+              if (this.pingTimer) {
+                clearInterval(this.pingTimer);
+                this.pingTimer = null;
+              }
+            });
           }
         }, PING_INTERVAL);
+
         resolve(response);
       } catch (error) {
         console.error('Authorization failed:', error);
+        this.isConnected = false;
         reject(error);
       } finally {
-        this.authorizationPromise = null; // Clear promise after completion
+        this.authorizationPromise = null;
       }
     });
+
     return this.authorizationPromise;
   }
 
@@ -125,28 +153,31 @@ class DerivApiService {
       console.warn('Cannot get account details: no token available.');
       return [];
     }
-    
-    // Ensure authorization completes before fetching details
-    if (!this.isConnected) {
-        // Wait for connection to establish and potentially authorize
-        await new Promise<void>(resolve => {
-            const checkConnection = setInterval(() => {
-                if (this.isConnected) {
-                    clearInterval(checkConnection);
-                    resolve();
-                }
-            }, 100);
-        });
-    }
-
-    if (this.authorizationPromise) {
-        await this.authorizationPromise;
-    } else {
-        // If not already authorizing, initiate authorization
-        await this.authorize();
-    }
 
     try {
+      // Wait for connection and authorization
+      if (!this.isConnected) {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Connection timeout'));
+          }, 10000);
+
+          const checkConnection = setInterval(() => {
+            if (this.isConnected) {
+              clearInterval(checkConnection);
+              clearTimeout(timeout);
+              resolve();
+            }
+          }, 100);
+        });
+      }
+
+      if (this.authorizationPromise) {
+        await this.authorizationPromise;
+      } else if (this.token) {
+        await this.authorize();
+      }
+
       const accountListResponse = await this.api.send({
         "account_list": 1
       });
@@ -155,44 +186,48 @@ class DerivApiService {
       const accounts: Account[] = accountListResponse.account_list.map((acc: any) => ({
         loginid: acc.loginid,
         currency: acc.currency,
-        balance: 0, // Initialize balance to 0, will fetch actual balance below
+        balance: 0,
         is_virtual: acc.is_virtual
       }));
 
       const accountsWithBalances: Account[] = [];
       for (const account of accounts) {
-        // Ensure the token is still valid for this account before fetching balance
-        const balanceResponse = await this.api.balance({ account: account.loginid });
-        accountsWithBalances.push({
-          ...account,
-          balance: balanceResponse.balance.balance
-        });
+        try {
+          const balanceResponse = await this.api.balance({ account: account.loginid });
+          accountsWithBalances.push({
+            ...account,
+            balance: balanceResponse.balance.balance
+          });
+        } catch (error) {
+          console.error(`Error fetching balance for account ${account.loginid}:`, error);
+          accountsWithBalances.push(account);
+        }
       }
       
       return accountsWithBalances;
 
     } catch (error) {
       console.error('Error fetching account details:', error);
-      return [];
+      throw error;
     }
   }
 
   public async switchAccount(loginid: string): Promise<any> {
     if (!this.token) {
-      console.warn('Cannot switch account: no token available.');
-      return null;
+      throw new Error('Cannot switch account: no token available.');
     }
+
     try {
       const switchResponse = await this.api.send({
         "switch_account": loginid
       });
       console.log('Switch account response:', switchResponse);
-      // Update the stored token if a new one is provided on switch
+
       if (switchResponse.authorize.token) {
         this.token = switchResponse.authorize.token;
         localStorage.setItem('deriv_token', switchResponse.authorize.token);
       }
-      // Re-authorize after switch to update the API object's internal state
+
       await this.authorize();
       return switchResponse;
     } catch (error) {
@@ -203,17 +238,18 @@ class DerivApiService {
 
   public disconnect() {
     if (this.reconnectTimeout) {
-        clearTimeout(this.reconnectTimeout);
-        this.reconnectTimeout = null;
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
     }
     if (this.pingTimer) {
-        clearInterval(this.pingTimer);
-        this.pingTimer = null;
+      clearInterval(this.pingTimer);
+      this.pingTimer = null;
     }
     if (this.connection) {
-        this.connection.close();
+      this.connection.close();
     }
-    this.isConnected = false; // Set connection status to false on explicit disconnect
+    this.isConnected = false;
+    this.reconnectAttempts = 0;
   }
 }
 
