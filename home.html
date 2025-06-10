@@ -101,26 +101,29 @@
         .input-group-container {
             width: 100%;
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* Changed to row */
+            flex-wrap: wrap; /* Allow items to wrap */
             gap: 10px; /* Space between form groups */
+            justify-content: space-between; /* Distribute items evenly */
         }
 
         .form-group {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 100%;
+            width: calc(33.33% - 10px); /* Roughly one-third width minus gap */
+            flex-grow: 1; /* Allow growing to fill space */
         }
 
         .form-group label {
-            flex-basis: 50%; /* Allocate space for labels */
+            flex-basis: 50%;
             text-align: left;
             font-size: 0.95em;
             color: #555;
         }
 
         .form-group input[type="number"] {
-            flex-basis: 45%; /* Allocate space for inputs */
+            flex-basis: 45%;
             padding: 8px;
             border: 1px solid #D9DAD9;
             border-radius: 5px;
@@ -129,13 +132,14 @@
         }
 
         .form-group.checkbox-group {
-            justify-content: flex-start; /* Align checkbox to left */
+            justify-content: flex-start;
             gap: 10px;
             margin-top: 10px;
+            width: 100%; /* Checkbox group should still take full width */
         }
 
         .form-group.checkbox-group input[type="checkbox"] {
-            width: auto; /* Override flex-basis for checkbox */
+            width: auto;
             margin: 0;
         }
 
@@ -268,6 +272,19 @@
                 right: 10px;
             }
         }
+
+        /* Responsive adjustments for 3-per-row layout */
+        @media (max-width: 900px) {
+            .form-group {
+                width: calc(50% - 10px); /* 2 per row on medium screens */
+            }
+        }
+
+        @media (max-width: 600px) {
+            .form-group {
+                width: 100%; /* 1 per row on small screens */
+            }
+        }
     </style>
 </head>
 <body>
@@ -318,6 +335,22 @@
                         <div class="form-group checkbox-group">
                             <input type="checkbox" id="use-martingale">
                             <label for="use-martingale">Use Martingale</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="t0">T0:</label>
+                            <input type="number" id="t0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="t1">T1:</label>
+                            <input type="number" id="t1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="t2">T2:</label>
+                            <input type="number" id="t2" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="t3">T3:</label>
+                            <input type="number" id="t3" value="0">
                         </div>
                     </div>
                 </div>
