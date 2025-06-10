@@ -45,6 +45,59 @@
         .btn-logout:hover {
             background-color: #c82333;
         }
+        /* New Layout Containers */
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1200px; /* Adjust as needed */
+            padding: 20px;
+            box-sizing: border-box;
+            margin-top: 50px; /* To prevent overlap with profile icon */
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            width: 48%; /* Roughly half the width */
+            margin-right: 2%; /* Space between left and right columns */
+        }
+
+        .right-column {
+            width: 48%; /* Roughly half the width */
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px; /* Space between containers */
+            min-height: 150px; /* Example height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .bottom-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .bottom-container {
+            width: 100%; /* Full width */
+        }
+
         /* Profile Icon and Dropdown Styles */
         .profile-icon-container {
             position: absolute;
@@ -52,7 +105,7 @@
             right: 20px;
             cursor: pointer;
             z-index: 1000;
-            display: flex; /* To align icon and text */
+            display: flex;
             align-items: center;
         }
         .profile-icon {
@@ -67,7 +120,7 @@
             align-items: center;
             background-color: #fff;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-left: 10px; /* Space from the text */
+            margin-left: 10px;
         }
         .account-summary {
             display: flex;
@@ -129,18 +182,33 @@
         }
 
         /* Responsive adjustments */
+        @media (max-width: 768px) { /* Changed breakpoint for tablet/larger phones */
+            .main-content {
+                flex-direction: column;
+            }
+            .left-column, .right-column {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+            .bottom-container {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+
         @media (max-width: 600px) {
             .profile-icon-container {
                 top: 10px;
                 right: 10px;
-                flex-direction: row-reverse; /* Put icon first on small screens */
+                flex-direction: row-reverse;
             }
             .account-summary {
-                margin-right: 5px; /* Adjust spacing */
-                align-items: flex-start; /* Align text to left if icon is on the right */
+                margin-right: 5px;
+                align-items: flex-start;
             }
             .profile-icon {
-                margin-left: 0; /* No left margin on small screens */
+                margin-left: 0;
             }
             .profile-dropdown {
                 top: 45px;
@@ -170,9 +238,22 @@
         </div>
     </div>
 
-    <div class="home-container">
-        <!-- Content removed as per user request -->
+    <div class="main-wrapper">
+        <div class="main-content">
+            <div class="left-column">
+                <div class="container">Left Container 1</div>
+                <div class="container">Left Container 2</div>
+            </div>
+            <div class="right-column">
+                <div class="container">Right Container</div>
+            </div>
+        </div>
+        <div class="bottom-section">
+            <div class="container bottom-container">Bottom Container 1</div>
+            <div class="container bottom-container">Bottom Container 2</div>
+        </div>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const profileIconContainer = document.querySelector('.profile-icon-container');
